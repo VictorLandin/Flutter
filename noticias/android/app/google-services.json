@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "447123914145",
+    "project_id": "noticias-trabajo-practicas",
+    "storage_bucket": "noticias-trabajo-practicas.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:447123914145:android:0154a3a61bb9b0eed39fe0",
+        "android_client_info": {
+          "package_name": "com.victorlandin.noticias"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4lhVKwQIFE_SrQZ4PGshdWLS3vzOvOq4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

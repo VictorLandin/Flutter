@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -11,7 +10,6 @@ const _apikey = 'aee3de213ca24727a918cc0f771871e7';
 
 class NewsService with ChangeNotifier {
   List<Article> headlines = [];
-
   String _selectedCategory = 'Business';
 
   List<CategoryNews> categories = [
@@ -27,14 +25,14 @@ class NewsService with ChangeNotifier {
 
   NewsService() {
     getTopHeadlines();
-
     for (var item in categories) {
       categoryArticles[item.name] = [];
     }
-    getArticlesByCategory( _selectedCategory );
+    getArticlesByCategory(_selectedCategory);
   }
 
   String get selectedCategory => _selectedCategory;
+
   set selectedCategory(String value) {
     _selectedCategory = value;
     getArticlesByCategory(value);
@@ -47,7 +45,14 @@ class NewsService with ChangeNotifier {
     const url = '$_urlNews/top-headlines?country=us&apiKey=$_apikey';
     final resp = await http.get(Uri.parse(url));
     final newsResponse = NewsResponse.fromJson(resp.body);
-    headlines.addAll(newsResponse.articles);
+
+    // Filtra los artículos antes de agregarlos a headlines
+    for (var article in newsResponse.articles) {
+      if (_isValidArticle(article)) {
+        headlines.add(article);
+      }
+    }
+
     notifyListeners();
   }
 
@@ -58,8 +63,22 @@ class NewsService with ChangeNotifier {
     final url = '$_urlNews/top-headlines?country=us&category=$category&apiKey=$_apikey';
     final resp = await http.get(Uri.parse(url));
     final newsResponse = NewsResponse.fromJson(resp.body);
-    categoryArticles[category]?.addAll(newsResponse.articles);
+
+    // Filtra los artículos antes de agregarlos a categoryArticles
+    for (var article in newsResponse.articles) {
+      if (_isValidArticle(article)) {
+        categoryArticles[category]?.add(article);
+      }
+    }
+
     notifyListeners();
   }
 
+  // Función para verificar si el artículo es válido, no es valido si cualquiera de sus valores es [removed]
+  bool _isValidArticle(Article article) {
+    if (article.description == '[Removed]' || article.title == '[Removed]') {
+      return false;
+    }
+    return true;
+  }
 }

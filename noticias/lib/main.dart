@@ -1,10 +1,17 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:noticias/services/news_service.dart';
+import 'package:noticias/services/notifications_service.dart';
 import 'package:noticias/theme/theme.dart';
 import 'package:provider/provider.dart';
+import 'providers/theme_provider.dart'; // Importa tu ThemeProvider
 import 'screens/screens.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -16,14 +23,21 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => NewsService(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider(isDarkMode: false), // Añadido el ThemeProvider
+        ),
       ],
-      child: MaterialApp(
-        theme: myTheme,
-        debugShowCheckedModeBanner: false,
-        title: 'Material App',
-        home: const TabsScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            scaffoldMessengerKey: NotificationsService.messengerKey,
+            theme: themeProvider.currentTheme, // Usa el tema actual desde el ThemeProvider
+            debugShowCheckedModeBanner: false,
+            title: 'Material App',
+            home: const TabsScreen(),
+          );
+        },
       ),
     );
   }
 }
-

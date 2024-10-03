@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:noticias/models/category_model.dart';
 import 'package:noticias/widgets/lista_noticias.dart';
 import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 import '../services/news_service.dart';
 import '../theme/theme.dart';
 
 class Tab2Screen extends StatelessWidget {
   const Tab2Screen({super.key});
+
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +65,8 @@ class _CategoryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    ThemeData currentTheme = Provider.of<ThemeProvider>(context).currentTheme;
     final categoriaSeleccionada = Provider.of<NewsService>(context).selectedCategory;
 
     return GestureDetector(
@@ -78,13 +82,15 @@ class _CategoryButton extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: (categoria.name == categoriaSeleccionada) ? Colors.white : null,
+              color: (categoria.name == categoriaSeleccionada)
+                  ? currentTheme.colorScheme.primary.withOpacity(0.2)
+                  : null,
             ),
             child: Icon(
               categoria.icon,
               color: (categoria.name == categoriaSeleccionada)
-                  ? myTheme.colorScheme.primary
-                  : Colors.white54,
+                  ? currentTheme.colorScheme.primary
+                  : Colors.grey,
             ),
           ),
           const SizedBox(height: 5),
@@ -92,8 +98,8 @@ class _CategoryButton extends StatelessWidget {
             categoria.name,
             style: TextStyle(
               color: (categoria.name == categoriaSeleccionada)
-                  ? myTheme.colorScheme.primary
-                  : Colors.white54,
+                  ? currentTheme.colorScheme.primary
+                  : Colors.grey,
             ),
           ),
         ],
