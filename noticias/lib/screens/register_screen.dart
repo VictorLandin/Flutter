@@ -89,7 +89,7 @@ class _RegisterForm extends StatelessWidget {
                 prefixIcon: Icons.alternate_email_rounded,
                 currentTheme: currentTheme,
               ),
-              onChanged: (value) => registerForm.email = value,
+              onChanged: (value) => registerForm.emailOrUsername = value, // Usar emailOrUsername
               validator: (value) {
                 String pattern =
                     r'^[^@]+@[^@]+\.[a-zA-Z]{2,}$';
@@ -141,7 +141,7 @@ class _RegisterForm extends StatelessWidget {
 
                 // Registrar usuario con nombre
                 final String? errorMessage = await authService.createUser(
-                  registerForm.email,
+                  registerForm.emailOrUsername, // Usar emailOrUsername
                   registerForm.password,
                   registerForm.name, // Pasar el nombre del usuario
                 );
