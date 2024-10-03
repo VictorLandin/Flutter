@@ -13,32 +13,32 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         body: AuthBackground(
-      child: SingleChildScrollView(
-          child: Column(children: [
-        const SizedBox(height: 250),
-        CardContainer(
-            child: Column(
-          children: [
-            const SizedBox(height: 10),
-            Text('Login', style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 30),
-            ChangeNotifierProvider(
-                create: (_) => LoginFormProvider(), child: _LoginForm())
-          ],
-        )),
-        const SizedBox(height: 50),
-        TextButton(
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, 'register');
-          },
-          child: const Text(
-            'Crear una nueva cuenta',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ),
-        const SizedBox(height: 50),
-      ])),
-    ));
+          child: SingleChildScrollView(
+              child: Column(children: [
+                const SizedBox(height: 250),
+                CardContainer(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 10),
+                        Text('Login', style: Theme.of(context).textTheme.headlineMedium),
+                        const SizedBox(height: 30),
+                        ChangeNotifierProvider(
+                            create: (_) => LoginFormProvider(), child: _LoginForm())
+                      ],
+                    )),
+                const SizedBox(height: 50),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, 'register');
+                  },
+                  child: const Text(
+                    'Crear una nueva cuenta',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 50),
+              ])),
+        ));
   }
 }
 
@@ -53,40 +53,41 @@ class _LoginForm extends StatelessWidget {
         autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
           children: [
+            // Campo para correo o nombre de usuario
             TextFormField(
                 autocorrect: false,
-                keyboardType: TextInputType.emailAddress,
+                keyboardType: TextInputType.text, // Ahora acepta texto libre
                 decoration: InputDecorations.authInputDecoration(
-                    hintText: 'email@example.com',
-                    labelText: 'Correo Electronico',
+                    hintText: 'email@example.com o Nombre de usuario',
+                    labelText: 'Correo o Nombre de usuario',
                     prefixIcon: Icons.alternate_email_rounded,
                     currentTheme: currentTheme),
-                onChanged: (value) => loginForm.email = value,
+                onChanged: (value) => loginForm.emailOrUsername = value,
                 validator: (value) {
-                  String pattern =
-                      r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
-                  RegExp regExp = new RegExp(pattern);
-
-                  return regExp.hasMatch(value ?? '')
+                  return (value != null && value.isNotEmpty)
                       ? null
-                      : 'El valor ingresado no luce como un correo';
+                      : 'Este campo no puede estar vacío';
                 }),
             const SizedBox(height: 30),
+
+            // Campo de contraseña
             TextFormField(
                 autocorrect: false,
                 obscureText: true,
                 decoration: InputDecorations.authInputDecoration(
                     hintText: '******',
-                    labelText: 'Contraseña',
+                    labelText: 'Contraseña',
                     prefixIcon: Icons.lock_outline_rounded,
                     currentTheme: currentTheme),
                 onChanged: (value) => loginForm.password = value,
                 validator: (value) {
                   return (value != null && value.length >= 6)
                       ? null
-                      : 'La contraseña debe de ser de 6 caracteres';
+                      : 'La contraseña debe de ser de 6 caracteres';
                 }),
             const SizedBox(height: 30),
+
+            // Botón de inicio de sesión
             MaterialButton(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
@@ -96,29 +97,30 @@ class _LoginForm extends StatelessWidget {
               onPressed: loginForm.isLoading
                   ? null
                   : () async {
-                      FocusScope.of(context).unfocus();
-                      final authService =
-                          Provider.of<AuthService>(context, listen: false);
-                      if (!loginForm.isValidForm()) return;
+                FocusScope.of(context).unfocus();
+                final authService =
+                Provider.of<AuthService>(context, listen: false);
+                if (!loginForm.isValidForm()) return;
 
-                      loginForm.isLoading = true;
+                loginForm.isLoading = true;
 
-                      final String? errorMessage = await authService.signIn(
-                          loginForm.email, loginForm.password);
+                // Intentar iniciar sesión con correo o nombre de usuario
+                final String? errorMessage = await authService.signInWithEmailOrUsername(
+                    loginForm.emailOrUsername, loginForm.password);
 
-                      if (errorMessage == null) {
-                        Navigator.pushReplacementNamed(context, 'home');
-                      } else {
-                        print(errorMessage);
-                        NotificationsService.showSnackbar(errorMessage);
-                        loginForm.isLoading = false;
-                      }
+                if (errorMessage == null) {
+                  Navigator.pushReplacementNamed(context, 'home');
+                } else {
+                  print(errorMessage);
+                  NotificationsService.showSnackbar(errorMessage);
+                  loginForm.isLoading = false;
+                }
 
-                      loginForm.isLoading = false;
-                    },
+                loginForm.isLoading = false;
+              },
               child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
+                  const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
                   child: Text(
                     loginForm.isLoading ? 'Cargando...' : 'Ingresar',
                     style: const TextStyle(color: Colors.white),

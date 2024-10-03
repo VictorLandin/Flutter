@@ -65,10 +65,7 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               Expanded(
                   flex: 1,
                   child: Container(
-                    alignment: Alignment.centerRight,
-                      child: _ThemeSwitch()
-                  )
-              ),
+                      alignment: Alignment.centerRight, child: _ThemeSwitch())),
             ],
           ),
         ),
@@ -120,17 +117,24 @@ class _ThemeSwitch extends StatelessWidget {
         provider.toggleDarkMode();
       },
       child: Container(
-        width: 70, // Ancho del contenedor
+        width: 60, // Ancho del contenedor
         height: 35, // Alto del contenedor
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30), // Bordes redondeados
+          border: Border.all(
+            color: currentTheme.colorScheme.primary.withOpacity(0.5),
+            width: 2,
+          ), //borde para imitar al borde de un switch
           color: themeProvider.isDarkMode ? Colors.grey[800] : Colors.grey[300],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(5.0),
+          padding: const EdgeInsets.all(2.0),
           child: AnimatedAlign(
-            alignment: themeProvider.isDarkMode ? Alignment.centerRight : Alignment.centerLeft,
-            duration: const Duration(milliseconds: 200), // Duración de la animación
+            alignment: themeProvider.isDarkMode
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
+            duration:
+                const Duration(milliseconds: 200), // Duración de la animación
             child: Container(
               width: 28, // Ancho del círculo
               height: 28, // Alto del círculo
@@ -140,7 +144,9 @@ class _ThemeSwitch extends StatelessWidget {
               ),
               child: Center(
                 child: Icon(
-                  themeProvider.isDarkMode ? Icons.nightlight_round : Icons.wb_sunny,
+                  themeProvider.isDarkMode
+                      ? Icons.nightlight_round
+                      : Icons.wb_sunny,
                   color: currentTheme.colorScheme.primary,
                   size: 20, // Tamaño del ícono dentro del círculo
                 ),
@@ -152,9 +158,6 @@ class _ThemeSwitch extends StatelessWidget {
     );
   }
 }
-
-
-
 
 class _Navegacion extends StatelessWidget {
   const _Navegacion({
