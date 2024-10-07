@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:noticias/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import '../services/news_service.dart';
 import '../providers/theme_provider.dart';
@@ -86,9 +87,12 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         // Lógica para Log In / Log Out
         final loggedIn = false; // Placeholder
         if (loggedIn) {
-          print('Logging out...');
+          AuthService().logout();
         } else {
-          print('Logging in...');
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => LoginScreen()),
+          );
         }
         break;
       case 1:

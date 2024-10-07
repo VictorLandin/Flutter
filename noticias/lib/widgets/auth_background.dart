@@ -8,7 +8,7 @@ class AuthBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Stack(
-      children: [const _PurpleBox(), const _HeaderIcon(), child],
+      children: [const _ColorBox(), const _HeaderIcon(), child],
     );
   }
 }
@@ -34,8 +34,8 @@ class _HeaderIcon extends StatelessWidget {
   }
 }
 
-class _PurpleBox extends StatelessWidget {
-  const _PurpleBox({super.key});
+class _ColorBox extends StatelessWidget {
+  const _ColorBox();
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +43,7 @@ class _PurpleBox extends StatelessWidget {
     return Container(
         width: double.infinity,
         height: size.height * 0.4,
-        decoration: _PurpleBackground(),
+        decoration: _colorBackground(),
         child: Stack(
           children: [
             Positioned(
@@ -75,7 +75,7 @@ class _PurpleBox extends StatelessWidget {
         ));
   }
 
-  BoxDecoration _PurpleBackground() {
+  BoxDecoration _colorBackground() {
     return const BoxDecoration(
       gradient: LinearGradient(
         colors: [

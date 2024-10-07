@@ -8,6 +8,8 @@ import '../providers/login_form_provider.dart';
 import '../services/services.dart';
 
 class RegisterScreen extends StatelessWidget {
+  const RegisterScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,9 +33,12 @@ class RegisterScreen extends StatelessWidget {
               ),
               const SizedBox(height: 50),
               TextButton(
+                style: ButtonStyle(
+                  overlayColor: WidgetStateProperty.all(Colors.indigo.withOpacity(0.1)),
+                ),
                 child: const Text(
                   '¿Ya tienes cuenta?',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
                 ),
                 onPressed: () {
                   Navigator.pushReplacementNamed(context, 'login');

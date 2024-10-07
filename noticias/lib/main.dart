@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:noticias/router/app_routes.dart';
 import 'package:noticias/services/news_service.dart';
 import 'package:noticias/services/notifications_service.dart';
 import 'package:noticias/share_preferences/preferences.dart';
@@ -36,7 +37,9 @@ class MyApp extends StatelessWidget {
             theme: themeProvider.currentTheme, // Usa el tema actual desde el ThemeProvider
             debugShowCheckedModeBanner: false,
             title: 'Material App',
-            home: const TabsScreen(),
+            initialRoute: AppRoutes.initialRoute,
+            routes: AppRoutes.getAppRoutes(),
+            onGenerateRoute: AppRoutes.onGenerateRoute,
           );
         },
       ),

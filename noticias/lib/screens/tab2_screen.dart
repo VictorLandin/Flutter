@@ -43,20 +43,49 @@ class _ListaCategorias extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: 95,
-      child: ListView.builder(
-        physics: const BouncingScrollPhysics(),
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
-        itemBuilder: (BuildContext context, int index) {
-          return Padding(
-            padding: const EdgeInsets.all(8),
-            child: _CategoryButton(categoria: categories[index]),
-          );
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Ajusta el ancho que deseas para cada botón de categoría
+          const double categoryButtonWidth = 120.0;
+
+          // Verifica si el espacio disponible es suficiente para mostrar todas las categorías sin scroll
+          final isScrollable = constraints.maxWidth < (categories.length * categoryButtonWidth);
+
+          if (isScrollable) {
+            // Si no hay suficiente espacio, usa `SingleChildScrollView` para hacer scroll horizontal
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: categories.map((category) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: _CategoryButton(categoria: category),
+                  );
+                }).toList(),
+              ),
+            );
+          } else {
+            // Si hay suficiente espacio, usa `Wrap` para distribuir equitativamente
+            return Wrap(
+              alignment: WrapAlignment.spaceBetween, // Distribuye equitativamente
+              children: categories.map((category) {
+                return SizedBox(
+                  width: categoryButtonWidth,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: _CategoryButton(categoria: category),
+                  ),
+                );
+              }).toList(),
+            );
+          }
         },
       ),
     );
   }
 }
+
 
 class _CategoryButton extends StatelessWidget {
   const _CategoryButton({super.key, required this.categoria});
@@ -107,3 +136,4 @@ class _CategoryButton extends StatelessWidget {
     );
   }
 }
+

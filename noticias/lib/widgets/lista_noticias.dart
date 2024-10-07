@@ -233,12 +233,13 @@ class _TarjetaTopBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10),
       margin: const EdgeInsets.only(bottom: 10),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '${index + 1}. ',
             style: TextStyle(color: currentTheme.colorScheme.primary),
           ),
-          Text('${noticia.source.name}. '),
+          Expanded(child: Text('${noticia.source.name}. ')),
         ],
       ),
     );

@@ -9,10 +9,10 @@ class InputDecorations {
   }) {
     return InputDecoration(
       enabledBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: currentTheme.colorScheme.primary),
+        borderSide: BorderSide(color: currentTheme.colorScheme.secondary),
       ),
       focusedBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: currentTheme.colorScheme.primary, width: 2),
+        borderSide: BorderSide(color: currentTheme.colorScheme.secondary, width: 2),
       ),
       hintText: hintText,
       labelText: labelText,
