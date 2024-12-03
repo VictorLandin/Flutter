@@ -34,7 +34,7 @@ class RegisterScreen extends StatelessWidget {
               const SizedBox(height: 50),
               TextButton(
                 style: ButtonStyle(
-                  overlayColor: WidgetStateProperty.all(Colors.indigo.withOpacity(0.1)),
+                  overlayColor: MaterialStateProperty.all(Colors.indigo.withOpacity(0.1)),
                 ),
                 child: const Text(
                   '¿Ya tienes cuenta?',
@@ -59,117 +59,114 @@ class _RegisterForm extends StatelessWidget {
     final registerForm = Provider.of<LoginFormProvider>(context);
     ThemeData currentTheme = Provider.of<ThemeProvider>(context).currentTheme;
 
-    return Container(
-      child: Form(
-        key: registerForm.formKey,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
-        child: Column(
-          children: [
-            // Campo de nombre
-            TextFormField(
-              autocorrect: false,
-              keyboardType: TextInputType.name,
-              decoration: InputDecorations.authInputDecoration(
-                hintText: 'John Doe',
-                labelText: 'Nombre completo',
-                prefixIcon: Icons.person,
-                currentTheme: currentTheme,
-              ),
-              onChanged: (value) => registerForm.name = value,
-              validator: (value) {
-                return (value != null && value.length >= 2)
-                    ? null
-                    : 'El nombre debe tener al menos 2 caracteres';
-              },
+    return Form(
+      key: registerForm.formKey,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      child: Column(
+        children: [
+          // Campo de nombre
+          TextFormField(
+            autocorrect: false,
+            keyboardType: TextInputType.name,
+            decoration: InputDecorations.authInputDecoration(
+              hintText: 'Tu Nombre',
+              labelText: 'Nombre de Usuario',
+              prefixIcon: Icons.person,
+              currentTheme: currentTheme,
             ),
-            const SizedBox(height: 30),
+            onChanged: (value) => registerForm.name = value,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'El nombre no puede estar vacío';
+              }
+              if (value.length < 2) {
+                return 'El nombre debe tener al menos 2 caracteres';
+              }
+              return null; // Validación exitosa
+            },
+          ),
+          const SizedBox(height: 30),
 
-            // Campo de correo
-            TextFormField(
-              autocorrect: false,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecorations.authInputDecoration(
-                hintText: 'email@example.com',
-                labelText: 'Correo Electrónico',
-                prefixIcon: Icons.alternate_email_rounded,
-                currentTheme: currentTheme,
-              ),
-              onChanged: (value) => registerForm.emailOrUsername = value, // Usar emailOrUsername
-              validator: (value) {
-                String pattern =
-                    r'^[^@]+@[^@]+\.[a-zA-Z]{2,}$';
-                RegExp regExp = RegExp(pattern);
-
-                return regExp.hasMatch(value ?? '')
-                    ? null
-                    : 'El valor ingresado no es un correo válido';
-              },
+          // Campo de correo
+          TextFormField(
+            autocorrect: false,
+            keyboardType: TextInputType.emailAddress,
+            decoration: InputDecorations.authInputDecoration(
+              hintText: 'email@example.com',
+              labelText: 'Correo Electrónico',
+              prefixIcon: Icons.alternate_email_rounded,
+              currentTheme: currentTheme,
             ),
-            const SizedBox(height: 30),
+            onChanged: (value) => registerForm.emailOrUsername = value,
+            validator: (value) {
+              String pattern = r'^[^@]+@[^@]+\.[a-zA-Z]{2,}$';
+              RegExp regExp = RegExp(pattern);
+              return regExp.hasMatch(value ?? '') ? null : 'Correo no válido';
+            },
+          ),
+          const SizedBox(height: 30),
 
-            // Campo de contraseña
-            TextFormField(
-              autocorrect: false,
-              obscureText: true,
-              decoration: InputDecorations.authInputDecoration(
-                hintText: '******',
-                labelText: 'Contraseña',
-                prefixIcon: Icons.lock_outline_rounded,
-                currentTheme: currentTheme,
-              ),
-              onChanged: (value) => registerForm.password = value,
-              validator: (value) {
-                return (value != null && value.length >= 6)
-                    ? null
-                    : 'La contraseña debe tener al menos 6 caracteres';
-              },
+          // Campo de contraseña
+          TextFormField(
+            autocorrect: false,
+            obscureText: true,
+            decoration: InputDecorations.authInputDecoration(
+              hintText: '******',
+              labelText: 'Contraseña',
+              prefixIcon: Icons.lock_outline_rounded,
+              currentTheme: currentTheme,
             ),
-            const SizedBox(height: 30),
-
-            // Botón de registro
-            MaterialButton(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              disabledColor: Colors.grey,
-              elevation: 0,
-              color: Colors.deepPurple,
-              onPressed: registerForm.isLoading
+            onChanged: (value) => registerForm.password = value,
+            validator: (value) {
+              return (value != null && value.length >= 6)
                   ? null
-                  : () async {
-                FocusScope.of(context).unfocus();
-                final authService = Provider.of<AuthService>(context, listen: false);
+                  : 'La contraseña debe tener al menos 6 caracteres';
+            },
+          ),
+          const SizedBox(height: 30),
 
-                if (!registerForm.isValidForm()) return;
+          // Botón de registro
+          MaterialButton(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            disabledColor: Colors.grey,
+            elevation: 0,
+            color: Colors.deepPurple,
+            onPressed: registerForm.isLoading
+                ? null
+                : () async {
+              FocusScope.of(context).unfocus();
+              final authService = Provider.of<AuthService>(context, listen: false);
 
-                registerForm.isLoading = true;
+              if (!registerForm.isValidForm()) return;
 
-                // Registrar usuario con nombre
-                final String? errorMessage = await authService.createUser(
-                  registerForm.emailOrUsername, // Usar emailOrUsername
-                  registerForm.password,
-                  registerForm.name, // Pasar el nombre del usuario
+              registerForm.isLoading = true;
+
+              final String? errorMessage = await authService.createUser(
+                registerForm.emailOrUsername,
+                registerForm.password,
+                registerForm.name,
+              );
+
+              if (errorMessage == null) {
+                Navigator.pushReplacementNamed(context, 'home');
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(errorMessage)),
                 );
-
-                if (errorMessage == null) {
-                  Navigator.pushReplacementNamed(context, 'home');
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(errorMessage)),
-                  );
-                  registerForm.isLoading = false;
-                }
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
-                child: Text(
-                  registerForm.isLoading ? 'Cargando...' : 'Registrar',
-                  style: const TextStyle(color: Colors.white),
-                ),
+                registerForm.isLoading = false;
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
+              child: Text(
+                registerForm.isLoading ? 'Cargando...' : 'Registrar',
+                style: const TextStyle(color: Colors.white),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

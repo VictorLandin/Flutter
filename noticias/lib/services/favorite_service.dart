@@ -1,31 +1,28 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class FavoritesService {
-  final CollectionReference favoritesCollection =
-    FirebaseFirestore.instance.collection('favorites');
+  final DatabaseReference favoritesRef = FirebaseDatabase.instance.ref('favorites');
 
   // Add favorite news article
-  Future<DocumentReference<Map<String, dynamic>>> addFavorite(String userId, Map<String, dynamic> articleData) async {
-    return await favoritesCollection
-      .doc(userId)
-      .collection('news')
-      .add(articleData);
+  Future<void> addFavorite(String userId, Map<String, dynamic> articleData) async {
+    await FirebaseDatabase.instance.ref('users/$userId/favorites').push().set(articleData);
   }
 
   // Add favorite publisher
-  Future<DocumentReference<Map<String, dynamic>>> addFavoritePublisher(String userId, String publisherName) async {
-    return await favoritesCollection
-      .doc(userId)
-      .collection('publishers')
-      .add({'name': publisherName});
+  Future<void> addFavoritePublisher(String userId, String publisherName) async {
+    await FirebaseDatabase.instance
+        .ref('users/$userId/favoritePublishers')
+        .push()
+        .set({'name': publisherName});
   }
 
   // Get user's favorite news
-  Stream<List<DocumentSnapshot>> getUserFavorites(String userId) {
-    return favoritesCollection
-      .doc(userId)
-      .collection('news')
-      .snapshots()
-      .map((snapshot) => snapshot.docs);
+  Stream<List<Map<String, dynamic>>> getUserFavorites(String userId) {
+    final userFavoritesRef = FirebaseDatabase.instance.ref('users/$userId/favorites');
+    return userFavoritesRef.onValue.map((event) {
+      if (event.snapshot.value == null) return [];
+      final Map<dynamic, dynamic> favoritesMap = event.snapshot.value as Map;
+      return favoritesMap.values.cast<Map<String, dynamic>>().toList();
+    });
   }
 }

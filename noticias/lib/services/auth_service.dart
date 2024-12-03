@@ -1,99 +1,120 @@
 import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class AuthService extends ChangeNotifier {
   final String _baseUrl = 'identitytoolkit.googleapis.com';
   final String _firebaseToken = 'AIzaSyA4lhVKwQIFE_SrQZ4PGshdWLS3vzOvOq4';
   final storage = const FlutterSecureStorage();
+  bool _isAuthenticated = false;
 
-  // Firestore instance
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  bool get isAuthenticated => _isAuthenticated;
+
+  AuthService() {
+    _auth.authStateChanges().listen((User? user) {
+      _updateAuthState(user); // Actualizar el estado de autenticación
+    });
+  }
+
+  void _updateAuthState(User? user) {
+    _isAuthenticated = user != null;
+    notifyListeners(); // Notificar a los widgets dependientes
+  }
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final DatabaseReference _db = FirebaseDatabase.instanceFor(
+    app: Firebase.app(),
+    databaseURL: 'https://noticias-trabajo-practicas-default-rtdb.europe-west1.firebasedatabase.app',
+  ).ref();
 
   Future<String?> createUser(String email, String password, String name) async {
     try {
-      final Map<String, dynamic> authData = {
+      // Crear el usuario en Firebase Authentication
+      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final String userId = userCredential.user!.uid;
+
+      // Guardar datos del usuario en Realtime Database
+      await _db.child('users/$userId').set({
+        'name': name,
         'email': email,
-        'password': password,
-        'returnSecureToken': true,
-      };
+        'createdAt': DateTime.now().toIso8601String(),
+      });
 
-      final url = Uri.https(_baseUrl, '/v1/accounts:signUp', {'key': _firebaseToken});
-      final resp = await http.post(url, body: json.encode(authData));
-      final Map<String, dynamic> decodedResp = json.decode(resp.body);
-
-      if (decodedResp.containsKey('idToken')) {
-        await storage.write(key: 'token', value: decodedResp['idToken']);
-        await _db.collection('users').doc(decodedResp['localId']).set({
-          'name': name,
-          'email': email,
-          'createdAt': Timestamp.now(),
-        });
-        return null;
-      } else {
-        return decodedResp['error']['message'] ?? 'Error desconocido al registrar usuario';
+      // Guardar token en el almacenamiento seguro
+      final String? token = await userCredential.user?.getIdToken();
+      if (token != null) {
+        await storage.write(key: 'token', value: token);
       }
+
+      return null; // Éxito
     } catch (e) {
-      return 'Error de conexión: ${e.toString()}';
+      return 'Error al registrar usuario: ${e.toString()}';
     }
   }
 
-  // Iniciar sesión con correo o nombre de usuario
   Future<String?> signInWithEmailOrUsername(String emailOrUsername, String password) async {
-    String email = emailOrUsername;
+    try {
+      String email = emailOrUsername;
 
-    // Si es un nombre de usuario, buscamos el correo en Firestore
-    if (!isValidEmail(emailOrUsername)) {
-      final userDoc = await _db.collection('users')
-          .where('username', isEqualTo: emailOrUsername)
-          .limit(1)
-          .get();
+      // Si no es un correo válido, buscar el correo usando el nombre de usuario
+      if (!isValidEmail(emailOrUsername)) {
+        final DatabaseEvent snapshot = await _db
+            .child('users')
+            .orderByChild('name')
+            .equalTo(emailOrUsername)
+            .once();
 
-      if (userDoc.docs.isNotEmpty) {
-        email = userDoc.docs.first.data()['email'];
-      } else {
-        return 'Usuario no encontrado';
+        if (snapshot.snapshot.value == null) {
+          return 'Usuario no encontrado';
+        }
+
+        final Map<String, dynamic> userData = Map<String, dynamic>.from(
+            (snapshot.snapshot.value as Map).values.first);
+        email = userData['email'];
       }
-    }
 
-    // Autenticación con Firebase usando correo electrónico
-    final Map<String, dynamic> authData = {
-      'email': email,
-      'password': password,
-      'returnSecureToken': true
-    };
+      // Iniciar sesión con Firebase Authentication
+      final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-    final url = Uri.https(_baseUrl, '/v1/accounts:signInWithPassword', {
-      'key': _firebaseToken
-    });
+      // Guardar token en el almacenamiento seguro
+      final String? token = await userCredential.user?.getIdToken();
+      if (token != null) {
+        await storage.write(key: 'token', value: token);
+      }
 
-    final resp = await http.post(url, body: json.encode(authData));
-    final Map<String, dynamic> decodedResp = json.decode(resp.body);
-
-    if (decodedResp.containsKey('idToken')) {
-      await storage.write(key: 'token', value: decodedResp['idToken']);
-      return null; // Success
-    } else {
-      return decodedResp['error']['message'];
+      return null; // Éxito
+    } catch (e) {
+      return 'Error al iniciar sesión: ${e.toString()}';
     }
   }
 
-  // Método auxiliar para validar si es un correo
+  // Validar si es un correo electrónico válido
   bool isValidEmail(String input) {
     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[a-zA-Z]{2,}$');
     return emailRegex.hasMatch(input);
   }
 
-
-  // Logout the user
-  Future logout() async {
+  // Cerrar sesión
+  Future<void> logout() async {
+    await _auth.signOut();
     await storage.delete(key: 'token');
+    _updateAuthState(null); // Actualizar el estado después del logout
   }
 
-  // Read the token
-  Future<String> readToken() async {
-    return await storage.read(key: 'token') ?? '';
+
+  // Leer el token almacenado
+  Future<String?> readToken() async {
+    return await storage.read(key: 'token');
   }
 }

@@ -3,8 +3,8 @@ import 'package:noticias/models/news_models.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart'; // Importar url_launcher
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/notifications_service.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 import '../providers/theme_provider.dart'; // Importar Firestore
 
@@ -71,14 +71,52 @@ class _TarjetaBotonesState extends State<_TarjetaBotones> {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       final userId = user.uid;
-      final snapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('favorites')
-          .where('title', isEqualTo: widget.noticia.title)
+      final snapshot = await FirebaseDatabase.instance
+          .ref('users/$userId/favorites')
+          .orderByChild('title')
+          .equalTo(widget.noticia.title)
           .get();
+
       setState(() {
-        isFavorite = snapshot.docs.isNotEmpty; // Si hay documentos, es favorito
+        isFavorite = snapshot.value != null; // Si hay valor, es favorito
+      });
+    }
+  }
+
+  Future<void> _addFavorite(String userId, Article noticia) async {
+    FirebaseDatabase.instance.setLoggingEnabled(true);
+    try {
+      print('Intentando añadir favorito: ${noticia.title}');
+      await FirebaseDatabase.instance
+          .ref('users/$userId/favorites')
+          .push()
+          .set({
+        'title': noticia.title,
+        'description': noticia.description,
+        'url': noticia.url,
+        'urlToImage': noticia.urlToImage,
+        'source': noticia.source.name,
+      });
+      print('Favorito añadido exitosamente: ${noticia.title}');
+    } catch (e) {
+      print('Error al añadir favorito: $e');
+      NotificationsService.showSnackbar('Error al guardar el favorito.');
+    }
+  }
+
+  Future<void> _removeFavorite(String userId, String noticiaTitle) async {
+    final snapshot = await FirebaseDatabase.instance
+        .ref('users/$userId/favorites')
+        .orderByChild('title')
+        .equalTo(noticiaTitle)
+        .get();
+
+    if (snapshot.value != null) {
+      final Map favorites = snapshot.value as Map;
+      favorites.forEach((key, value) async {
+        if (value['title'] == noticiaTitle) {
+          await FirebaseDatabase.instance.ref('users/$userId/favorites/$key').remove();
+        }
       });
     }
   }
@@ -149,32 +187,6 @@ class _TarjetaBotonesState extends State<_TarjetaBotones> {
     );
   }
 
-  Future<void> _addFavorite(String userId, Article noticia) async {
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('favorites')
-        .add({
-      'title': noticia.title,
-      'description': noticia.description,
-      'url': noticia.url,
-      'urlToImage': noticia.urlToImage,
-      'source': noticia.source.name,
-    });
-  }
-
-  Future<void> _removeFavorite(String userId, String noticiaTitle) async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('favorites')
-        .where('title', isEqualTo: noticiaTitle)
-        .get();
-
-    for (var doc in snapshot.docs) {
-      await doc.reference.delete();
-    }
-  }
 }
 
 class _TarjetaBody extends StatelessWidget {

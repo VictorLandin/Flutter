@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:noticias/services/auth_service.dart';
+import 'package:noticias/services/notifications_service.dart';
 import 'package:provider/provider.dart';
 import '../services/news_service.dart';
 import '../providers/theme_provider.dart';
@@ -77,18 +79,21 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   String _getLoginText(BuildContext context) {
-    final loggedIn = false; // Placeholder
-    return loggedIn ? 'Log Out' : 'Log In';
+    final authService = Provider.of<AuthService>(context);
+    return authService.isAuthenticated ? 'Log Out' : 'Log In';
   }
 
-  void _onMenuItemSelected(BuildContext context, int item) {
+
+  void _onMenuItemSelected(BuildContext context, int item) async {
+    final authService = Provider.of<AuthService>(context, listen: false);
     switch (item) {
       case 0:
-        // Lógica para Log In / Log Out
-        final loggedIn = false; // Placeholder
-        if (loggedIn) {
-          AuthService().logout();
+        if (authService.isAuthenticated) {
+          // Log Out
+          await authService.logout();
+          NotificationsService.showSnackbar('Has cerrado sesión');
         } else {
+          // Log In
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => LoginScreen()),
@@ -96,7 +101,7 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         }
         break;
       case 1:
-        // Navegar a la pantalla de ajustes
+      // Navegar a Ajustes
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const SettingsScreen()),
