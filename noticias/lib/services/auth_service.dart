@@ -13,29 +13,30 @@ class AuthService extends ChangeNotifier {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   Future<String?> createUser(String email, String password, String name) async {
-    final Map<String, dynamic> authData = {
-      'email': email,
-      'password': password,
-      'returnSecureToken': true
-    };
-
-    final url = Uri.https(_baseUrl, '/v1/accounts:signUp', {'key': _firebaseToken});
-    final resp = await http.post(url, body: json.encode(authData));
-    final Map<String, dynamic> decodedResp = json.decode(resp.body);
-
-    if (decodedResp.containsKey('idToken')) {
-      await storage.write(key: 'token', value: decodedResp['idToken']);
-
-      // Store additional user info in Firestore
-      await _db.collection('users').doc(decodedResp['localId']).set({
-        'name': name,
+    try {
+      final Map<String, dynamic> authData = {
         'email': email,
-        'createdAt': Timestamp.now(),
-      });
+        'password': password,
+        'returnSecureToken': true,
+      };
 
-      return null; // Success
-    } else {
-      return decodedResp['error']['message'];
+      final url = Uri.https(_baseUrl, '/v1/accounts:signUp', {'key': _firebaseToken});
+      final resp = await http.post(url, body: json.encode(authData));
+      final Map<String, dynamic> decodedResp = json.decode(resp.body);
+
+      if (decodedResp.containsKey('idToken')) {
+        await storage.write(key: 'token', value: decodedResp['idToken']);
+        await _db.collection('users').doc(decodedResp['localId']).set({
+          'name': name,
+          'email': email,
+          'createdAt': Timestamp.now(),
+        });
+        return null;
+      } else {
+        return decodedResp['error']['message'] ?? 'Error desconocido al registrar usuario';
+      }
+    } catch (e) {
+      return 'Error de conexión: ${e.toString()}';
     }
   }
 
