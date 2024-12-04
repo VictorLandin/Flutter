@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:noticias/router/app_routes.dart';
 import 'package:noticias/services/auth_service.dart';
 import 'package:noticias/services/notifications_service.dart';
 import 'package:provider/provider.dart';
@@ -28,17 +29,31 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return AppBar(
       title: const Text('Noticias'),
       actions: [
-        GestureDetector(
-          onTapDown: (details) => _showMenu(context, details.globalPosition),
-          child: const Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              child: Icon(Icons.person),
+        Row(
+          children: [
+            if (authService.isAuthenticated)
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Text(
+                  authService.currentUserName,
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
+            GestureDetector(
+              onTapDown: (details) => _showMenu(context, details.globalPosition),
+              child: const Padding(
+                padding: EdgeInsets.only(right: 16.0),
+                child: CircleAvatar(
+                  child: Icon(Icons.person),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ],
     );
