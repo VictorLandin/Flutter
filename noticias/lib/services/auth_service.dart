@@ -110,4 +110,27 @@ class AuthService extends ChangeNotifier {
     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[a-zA-Z]{2,}$');
     return emailRegex.hasMatch(input);
   }
+
+  Future<String?> deleteAccount(String password) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        return 'No hay usuario autenticado';
+      }
+
+      // Reautenticar al usuario
+      final cred = EmailAuthProvider.credential(
+        email: user.email!,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(cred);
+
+      // Eliminar la cuenta
+      await user.delete();
+      return null; // Éxito
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
 }

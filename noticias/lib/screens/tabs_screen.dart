@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:noticias/router/app_routes.dart';
 import 'package:noticias/services/auth_service.dart';
@@ -15,10 +16,28 @@ class TabsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => _NavegacionModel(),
-      child: const Scaffold(
-        appBar: _CustomAppBar(),
-        body: _Pantallas(),
-        bottomNavigationBar: _Navegacion(),
+      child: Consumer<AuthService>(
+        builder: (context, authService, _) {
+          final userId = authService.currentUser?.uid;
+
+          return FutureBuilder<DataSnapshot>(
+            future: FirebaseDatabase.instance.ref('users/$userId/favorites').get(),
+            builder: (context, snapshot) {
+              bool hasFavorites = false;
+              if (snapshot.connectionState == ConnectionState.done &&
+                  snapshot.hasData &&
+                  snapshot.data!.value != null) {
+                hasFavorites = (snapshot.data!.value as Map).isNotEmpty;
+              }
+
+              return Scaffold(
+                appBar: const _CustomAppBar(),
+                body: _Pantallas(hasFavorites: hasFavorites),
+                bottomNavigationBar: _Navegacion(hasFavorites: hasFavorites),
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -43,7 +62,9 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   authService.currentUserName,
                   style: const TextStyle(fontSize: 16),
                 ),
-              ),
+              )
+            else
+              const Text('Invitado'),
             GestureDetector(
               onTapDown: (details) => _showMenu(context, details.globalPosition),
               child: const Padding(
@@ -94,7 +115,7 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   String _getLoginText(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
+    final authService = Provider.of<AuthService>(context, listen: false);
     return authService.isAuthenticated ? 'Log Out' : 'Log In';
   }
 
@@ -184,45 +205,55 @@ class _ThemeSwitch extends StatelessWidget {
 }
 
 class _Navegacion extends StatelessWidget {
-  const _Navegacion({
-    super.key,
-  });
+  final bool hasFavorites;
+
+  const _Navegacion({required this.hasFavorites, super.key});
 
   @override
   Widget build(BuildContext context) {
     final navegacionModel = Provider.of<_NavegacionModel>(context);
+
     return BottomNavigationBar(
-        onTap: (i) => navegacionModel.pantallaActual = i,
-        currentIndex: navegacionModel.pantallaActual,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Para ti',
+      onTap: (i) => navegacionModel.pantallaActual = i,
+      currentIndex: navegacionModel.pantallaActual,
+      items: [
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline),
+          label: 'Para ti',
+        ),
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.public),
+          label: 'Encabezados',
+        ),
+        if (hasFavorites)
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.star),
+            label: 'Favoritos',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.public),
-            label: 'Encabezados',
-          ),
-        ]);
+      ],
+    );
   }
 }
 
 class _Pantallas extends StatelessWidget {
-  const _Pantallas({
-    super.key,
-  });
+  final bool hasFavorites;
+
+  const _Pantallas({required this.hasFavorites, super.key});
 
   @override
   Widget build(BuildContext context) {
     final navegacionModel = Provider.of<_NavegacionModel>(context);
 
+    final pages = [
+      const Tab1Screen(),
+      const Tab2Screen(),
+      if (hasFavorites) const FavoritesScreen(),
+    ];
+
     return PageView(
       controller: navegacionModel.pageController,
       physics: const NeverScrollableScrollPhysics(),
-      children: const <Widget>[
-        Tab1Screen(),
-        Tab2Screen(),
-      ],
+      children: pages,
     );
   }
 }
