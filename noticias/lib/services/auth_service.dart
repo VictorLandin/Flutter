@@ -111,26 +111,30 @@ class AuthService extends ChangeNotifier {
     return emailRegex.hasMatch(input);
   }
 
-  Future<String?> deleteAccount(String password) async {
+  Future<bool> deleteAccount(String password) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        return 'No hay usuario autenticado';
+
+      if (user != null) {
+        // Reautenticación para borrar la cuenta
+        final credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: password,
+        );
+        await user.reauthenticateWithCredential(credential);
+
+        // Eliminar los datos del usuario en la base de datos
+        await _db.child('users/${user.uid}').remove();
+
+        // Eliminar la cuenta de Firebase Authentication
+        await user.delete();
+
+        return true; // Operación exitosa
       }
-
-      // Reautenticar al usuario
-      final cred = EmailAuthProvider.credential(
-        email: user.email!,
-        password: password,
-      );
-      await user.reauthenticateWithCredential(cred);
-
-      // Eliminar la cuenta
-      await user.delete();
-      return null; // Éxito
+      return false; // Usuario no autenticado
     } catch (e) {
-      return e.toString();
+      debugPrint('Error al eliminar la cuenta: $e');
+      return false;
     }
   }
-
 }

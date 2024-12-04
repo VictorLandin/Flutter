@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:noticias/models/news_models.dart';
+import 'package:noticias/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart'; // Importar url_launcher
 import 'package:firebase_auth/firebase_auth.dart';
@@ -155,38 +156,41 @@ class _TarjetaBotonesState extends State<_TarjetaBotones> {
     );
   }
 
-  RawMaterialButton _favoriteButton(ThemeData currentTheme) {
-    return RawMaterialButton(
-      onPressed: () async {
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          final userId = user.uid;
-          if (isFavorite) {
-            // Eliminar de favoritos
-            await _removeFavorite(userId, widget.noticia.title);
-            setState(() {
-              isFavorite = false;
-            });
-          } else {
-            // Añadir a favoritos
-            await _addFavorite(userId, widget.noticia);
-            setState(() {
-              isFavorite = true;
-            });
-          }
-        } else {
-          NotificationsService.showSnackbar('Please login first');
+  Widget _favoriteButton(ThemeData currentTheme) {
+    return Consumer<AuthService>(
+      builder: (context, authService, _) {
+        final user = authService.currentUser;
+        if (user == null) {
+          return const SizedBox.shrink(); // No mostrar el botón si el usuario no está autenticado
         }
+
+        return RawMaterialButton(
+          onPressed: () async {
+            final userId = user.uid;
+            if (isFavorite) {
+              // Eliminar de favoritos
+              await _removeFavorite(userId, widget.noticia.title);
+              setState(() {
+                isFavorite = false;
+              });
+            } else {
+              // Añadir a favoritos
+              await _addFavorite(userId, widget.noticia);
+              setState(() {
+                isFavorite = true;
+              });
+            }
+          },
+          fillColor: currentTheme.colorScheme.primary,
+          shape: const StadiumBorder(),
+          child: Icon(
+            isFavorite ? Icons.star : Icons.star_border,
+            color: isFavorite ? Colors.yellow : Colors.white,
+          ),
+        );
       },
-      fillColor: currentTheme.colorScheme.primary,
-      shape: const StadiumBorder(),
-      child: Icon(
-        isFavorite ? Icons.star : Icons.star_border,
-        color: isFavorite ? Colors.yellow : Colors.white,
-      ),
     );
   }
-
 }
 
 class _TarjetaBody extends StatelessWidget {

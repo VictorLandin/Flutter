@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:noticias/router/app_routes.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/theme_provider.dart';
@@ -150,7 +151,7 @@ class _RegisterForm extends StatelessWidget {
               );
 
               if (errorMessage == null) {
-                Navigator.pushReplacementNamed(context, 'home');
+                AppRoutes.navigateAndRemoveUntil(context, 'home');
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(errorMessage)),

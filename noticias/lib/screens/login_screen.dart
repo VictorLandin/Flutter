@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+
 import '../providers/login_form_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/notifications_service.dart';
+import '../services/auth_service.dart';
 import '../theme/input_decorations.dart';
 import '../widgets/widgets.dart';
-import 'package:provider/provider.dart';
-
-import '../services/services.dart';
+import '../router/app_routes.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final localization = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: AuthBackground(
         child: SingleChildScrollView(
@@ -23,7 +27,10 @@ class LoginScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     const SizedBox(height: 10),
-                    Text('Login', style: Theme.of(context).textTheme.headlineMedium),
+                    Text(
+                      localization.login,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
                     const SizedBox(height: 30),
                     ChangeNotifierProvider(
                       create: (_) => LoginFormProvider(),
@@ -38,11 +45,15 @@ class LoginScreen extends StatelessWidget {
                   Navigator.pushReplacementNamed(context, 'register');
                 },
                 style: ButtonStyle(
-                  overlayColor: MaterialStateProperty.all(Colors.indigo.withOpacity(0.1)),
+                  overlayColor: WidgetStateProperty.all(Colors.indigo.withOpacity(0.1)),
                 ),
-                child: const Text(
-                  'Crear una nueva cuenta',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
+                child: Text(
+                  localization.createNewAccount,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
                 ),
               ),
               const SizedBox(height: 50),
@@ -57,8 +68,10 @@ class LoginScreen extends StatelessWidget {
 class _LoginForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    ThemeData currentTheme = Provider.of<ThemeProvider>(context).currentTheme;
+    final localization = AppLocalizations.of(context)!;
+    final themeProvider = Provider.of<ThemeProvider>(context).currentTheme;
     final loginForm = Provider.of<LoginFormProvider>(context);
+
     return Form(
       key: loginForm.formKey,
       autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -69,16 +82,16 @@ class _LoginForm extends StatelessWidget {
             autocorrect: false,
             keyboardType: TextInputType.text,
             decoration: InputDecorations.authInputDecoration(
-              hintText: 'email@example.com o Nombre de usuario',
-              labelText: 'Correo o Nombre de usuario',
+              hintText: localization.emailOrUsernameHint,
+              labelText: localization.emailOrUsername,
               prefixIcon: Icons.alternate_email_rounded,
-              currentTheme: currentTheme,
+              currentTheme: themeProvider,
             ),
             onChanged: (value) => loginForm.emailOrUsername = value,
             validator: (value) {
               return (value != null && value.isNotEmpty)
                   ? null
-                  : 'Este campo no puede estar vacío';
+                  : localization.fieldCannotBeEmpty;
             },
           ),
           const SizedBox(height: 30),
@@ -88,16 +101,16 @@ class _LoginForm extends StatelessWidget {
             autocorrect: false,
             obscureText: true,
             decoration: InputDecorations.authInputDecoration(
-              hintText: '******',
-              labelText: 'Contraseña',
+              hintText: localization.passwordHint,
+              labelText: localization.password,
               prefixIcon: Icons.lock_outline_rounded,
-              currentTheme: currentTheme,
+              currentTheme: themeProvider,
             ),
             onChanged: (value) => loginForm.password = value,
             validator: (value) {
               return (value != null && value.length >= 6)
                   ? null
-                  : 'La contraseña debe de ser de 6 caracteres';
+                  : localization.passwordMinLength;
             },
           ),
           const SizedBox(height: 30),
@@ -113,6 +126,7 @@ class _LoginForm extends StatelessWidget {
                 : () async {
               FocusScope.of(context).unfocus();
               final authService = Provider.of<AuthService>(context, listen: false);
+
               if (!loginForm.isValidForm()) return;
 
               loginForm.isLoading = true;
@@ -123,7 +137,7 @@ class _LoginForm extends StatelessWidget {
               );
 
               if (errorMessage == null) {
-                Navigator.pushReplacementNamed(context, 'home');
+                AppRoutes.navigateAndRemoveUntil(context, 'home');
               } else {
                 NotificationsService.showSnackbar(errorMessage);
               }
@@ -133,7 +147,7 @@ class _LoginForm extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
               child: Text(
-                loginForm.isLoading ? 'Cargando...' : 'Ingresar',
+                loginForm.isLoading ? localization.loading : localization.login,
                 style: const TextStyle(color: Colors.white),
               ),
             ),

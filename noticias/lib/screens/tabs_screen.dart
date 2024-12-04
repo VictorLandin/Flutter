@@ -1,13 +1,14 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
-import 'package:noticias/router/app_routes.dart';
-import 'package:noticias/services/auth_service.dart';
-import 'package:noticias/services/notifications_service.dart';
 import 'package:provider/provider.dart';
-import '../services/news_service.dart';
 import '../providers/theme_provider.dart';
-import '../screens/screens.dart'; // Importar la pantalla de ajustes y otras si es necesario
+import '../router/app_routes.dart';
+import '../services/auth_service.dart';
+import '../services/notifications_service.dart';
+import '../services/news_service.dart';
+import '../screens/screens.dart';
 
 class TabsScreen extends StatelessWidget {
   const TabsScreen({super.key});
@@ -49,9 +50,10 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final localization = AppLocalizations.of(context)!;
 
     return AppBar(
-      title: const Text('Noticias'),
+      title: Text(localization.appTitle),
       actions: [
         Row(
           children: [
@@ -64,7 +66,8 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               )
             else
-              const Text('Invitado'),
+              Text(localization.guest),
+            const SizedBox(width: 8),
             GestureDetector(
               onTapDown: (details) => _showMenu(context, details.globalPosition),
               child: const Padding(
@@ -81,6 +84,8 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   void _showMenu(BuildContext context, Offset position) {
+    final localization = AppLocalizations.of(context)!;
+
     showMenu(
       context: context,
       position: RelativeRect.fromLTRB(
@@ -90,9 +95,9 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           value: 0,
           child: Text(_getLoginText(context)),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 1,
-          child: Text('Ajustes'),
+          child: Text(localization.settings),
         ),
         PopupMenuItem(
           enabled: false,
@@ -100,11 +105,13 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Cambiar tema'),
+              Text(localization.darkMode),
               Expanded(
-                  flex: 1,
-                  child: Container(
-                      alignment: Alignment.centerRight, child: _ThemeSwitch())),
+                child: Container(
+                  alignment: Alignment.centerRight,
+                  child: _ThemeSwitch(),
+                ),
+              ),
             ],
           ),
         ),
@@ -116,32 +123,26 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   String _getLoginText(BuildContext context) {
     final authService = Provider.of<AuthService>(context, listen: false);
-    return authService.isAuthenticated ? 'Log Out' : 'Log In';
-  }
+    final localization = AppLocalizations.of(context)!;
 
+    return authService.isAuthenticated ? localization.logOut : localization.logIn;
+  }
 
   void _onMenuItemSelected(BuildContext context, int item) async {
     final authService = Provider.of<AuthService>(context, listen: false);
+    final localization = AppLocalizations.of(context)!;
+
     switch (item) {
       case 0:
         if (authService.isAuthenticated) {
-          // Log Out
           await authService.logout();
-          NotificationsService.showSnackbar('Has cerrado sesión');
+          NotificationsService.showSnackbar(localization.loggedOut);
         } else {
-          // Log In
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => LoginScreen()),
-          );
+          AppRoutes.navigateTo(context, 'login');
         }
         break;
       case 1:
-      // Navegar a Ajustes
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const SettingsScreen()),
-        );
+        AppRoutes.navigateTo(context, 'settings');
         break;
     }
   }
@@ -162,14 +163,14 @@ class _ThemeSwitch extends StatelessWidget {
         provider.toggleDarkMode();
       },
       child: Container(
-        width: 60, // Ancho del contenedor
-        height: 35, // Alto del contenedor
+        width: 60,
+        height: 35,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30), // Bordes redondeados
+          borderRadius: BorderRadius.circular(30),
           border: Border.all(
             color: currentTheme.colorScheme.primary.withOpacity(0.5),
             width: 2,
-          ), //borde para imitar al borde de un switch
+          ),
           color: themeProvider.isDarkMode ? Colors.grey[800] : Colors.grey[300],
         ),
         child: Padding(
@@ -178,14 +179,13 @@ class _ThemeSwitch extends StatelessWidget {
             alignment: themeProvider.isDarkMode
                 ? Alignment.centerRight
                 : Alignment.centerLeft,
-            duration:
-                const Duration(milliseconds: 200), // Duración de la animación
+            duration: const Duration(milliseconds: 200),
             child: Container(
-              width: 28, // Ancho del círculo
-              height: 28, // Alto del círculo
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: currentTheme.canvasColor, // Color del círculo
+                color: currentTheme.canvasColor,
               ),
               child: Center(
                 child: Icon(
@@ -193,7 +193,7 @@ class _ThemeSwitch extends StatelessWidget {
                       ? Icons.nightlight_round
                       : Icons.wb_sunny,
                   color: currentTheme.colorScheme.primary,
-                  size: 20, // Tamaño del ícono dentro del círculo
+                  size: 20,
                 ),
               ),
             ),
@@ -212,23 +212,24 @@ class _Navegacion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final navegacionModel = Provider.of<_NavegacionModel>(context);
+    final localization = AppLocalizations.of(context)!;
 
     return BottomNavigationBar(
       onTap: (i) => navegacionModel.pantallaActual = i,
       currentIndex: navegacionModel.pantallaActual,
       items: [
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          label: 'Para ti',
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.person_outline),
+          label: localization.forYou,
         ),
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.public),
-          label: 'Encabezados',
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.public),
+          label: localization.headlines,
         ),
         if (hasFavorites)
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.star),
-            label: 'Favoritos',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.star),
+            label: localization.favorites,
           ),
       ],
     );
@@ -266,8 +267,11 @@ class _NavegacionModel with ChangeNotifier {
 
   set pantallaActual(int value) {
     _pantallaActual = value;
-    _pageController.animateToPage(value,
-        duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+    _pageController.animateToPage(
+      value,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
     notifyListeners();
   }
 

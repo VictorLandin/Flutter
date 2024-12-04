@@ -10,15 +10,16 @@ const _apikey = 'aee3de213ca24727a918cc0f771871e7';
 
 class NewsService with ChangeNotifier {
   List<Article> headlines = [];
-  String _selectedCategory = 'Business';
+  String _selectedCategory = 'business'; // Identificador de la categoría seleccionada
 
+  // Define las categorías con identificadores únicos
   List<CategoryNews> categories = [
-    const CategoryNews(name: 'Business', icon: FontAwesomeIcons.building),
-    const CategoryNews(name: 'Entertainment', icon: FontAwesomeIcons.tv),
-    const CategoryNews(name: 'Health', icon: FontAwesomeIcons.addressCard),
-    const CategoryNews(name: 'Science', icon: FontAwesomeIcons.headSideVirus),
-    const CategoryNews(name: 'Sports', icon: FontAwesomeIcons.futbol),
-    const CategoryNews(name: 'Technology', icon: FontAwesomeIcons.memory),
+    const CategoryNews(id: 'business', icon: FontAwesomeIcons.building),
+    const CategoryNews(id: 'entertainment', icon: FontAwesomeIcons.tv),
+    const CategoryNews(id: 'health', icon: FontAwesomeIcons.addressCard),
+    const CategoryNews(id: 'science', icon: FontAwesomeIcons.headSideVirus),
+    const CategoryNews(id: 'sports', icon: FontAwesomeIcons.futbol),
+    const CategoryNews(id: 'technology', icon: FontAwesomeIcons.memory),
   ];
 
   Map<String, List<Article>> categoryArticles = {};
@@ -26,7 +27,7 @@ class NewsService with ChangeNotifier {
   NewsService() {
     getTopHeadlines();
     for (var item in categories) {
-      categoryArticles[item.name] = [];
+      categoryArticles[item.id] = [];
     }
     getArticlesByCategory(_selectedCategory);
   }

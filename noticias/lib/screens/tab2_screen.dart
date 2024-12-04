@@ -6,6 +6,7 @@ import '../providers/theme_provider.dart';
 
 import '../services/news_service.dart';
 import '../theme/theme.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class Tab2Screen extends StatelessWidget {
   const Tab2Screen({super.key});
@@ -94,39 +95,42 @@ class _CategoryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     ThemeData currentTheme = Provider.of<ThemeProvider>(context).currentTheme;
     final categoriaSeleccionada = Provider.of<NewsService>(context).selectedCategory;
+    final localization = AppLocalizations.of(context)!;
+
+    // Traducción basada en el id de la categoría
+    final translatedName = _translateCategory(localization, categoria.id);
 
     return GestureDetector(
       onTap: () {
         final newsService = Provider.of<NewsService>(context, listen: false);
-        newsService.selectedCategory = categoria.name;
+        newsService.selectedCategory = categoria.id;
       },
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,  // Center items vertically
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
             width: 40,
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: (categoria.name == categoriaSeleccionada)
+              color: (categoria.id == categoriaSeleccionada)
                   ? currentTheme.colorScheme.primary.withOpacity(0.2)
                   : null,
             ),
             child: Icon(
               categoria.icon,
-              color: (categoria.name == categoriaSeleccionada)
+              color: (categoria.id == categoriaSeleccionada)
                   ? currentTheme.colorScheme.primary
                   : Colors.grey,
             ),
           ),
           const SizedBox(height: 5),
           Text(
-            categoria.name,
+            translatedName,
             style: TextStyle(
-              color: (categoria.name == categoriaSeleccionada)
+              color: (categoria.id == categoriaSeleccionada)
                   ? currentTheme.colorScheme.primary
                   : Colors.grey,
             ),
@@ -136,4 +140,24 @@ class _CategoryButton extends StatelessWidget {
     );
   }
 }
+
+String _translateCategory(AppLocalizations localization, String categoryId) {
+  switch (categoryId) {
+    case 'business':
+      return localization.business;
+    case 'entertainment':
+      return localization.entertainment;
+    case 'health':
+      return localization.health;
+    case 'science':
+      return localization.science;
+    case 'sports':
+      return localization.sports;
+    case 'technology':
+      return localization.technology;
+    default:
+      return categoryId; // Devuelve el ID si no hay traducción
+  }
+}
+
 
