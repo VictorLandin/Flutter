@@ -21,25 +21,68 @@ class TabsScreen extends StatelessWidget {
         builder: (context, authService, _) {
           final userId = authService.currentUser?.uid;
 
-          return FutureBuilder<DataSnapshot>(
-            future: FirebaseDatabase.instance.ref('users/$userId/favorites').get(),
-            builder: (context, snapshot) {
-              bool hasFavorites = false;
-              if (snapshot.connectionState == ConnectionState.done &&
-                  snapshot.hasData &&
-                  snapshot.data!.value != null) {
-                hasFavorites = (snapshot.data!.value as Map).isNotEmpty;
-              }
-
-              return Scaffold(
-                appBar: const _CustomAppBar(),
-                body: _Pantallas(hasFavorites: hasFavorites),
-                bottomNavigationBar: _Navegacion(hasFavorites: hasFavorites),
-              );
-            },
+          return Scaffold(
+            appBar: const _CustomAppBar(),
+            body: _Pantallas(isAuthenticated: userId != null),
+            bottomNavigationBar: _Navegacion(isAuthenticated: userId != null),
           );
         },
       ),
+    );
+  }
+}
+
+class _Navegacion extends StatelessWidget {
+  final bool isAuthenticated;
+
+  const _Navegacion({required this.isAuthenticated, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final navegacionModel = Provider.of<_NavegacionModel>(context);
+    final localization = AppLocalizations.of(context)!;
+
+    return BottomNavigationBar(
+      onTap: (i) => navegacionModel.pantallaActual = i,
+      currentIndex: navegacionModel.pantallaActual,
+      items: [
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.person_outline),
+          label: localization.forYou,
+        ),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.public),
+          label: localization.headlines,
+        ),
+        if (isAuthenticated)
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.star),
+            label: localization.favorites,
+          ),
+      ],
+    );
+  }
+}
+
+class _Pantallas extends StatelessWidget {
+  final bool isAuthenticated;
+
+  const _Pantallas({required this.isAuthenticated, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final navegacionModel = Provider.of<_NavegacionModel>(context);
+
+    final pages = [
+      const Tab1Screen(),
+      const Tab2Screen(),
+      if (isAuthenticated) const FavoritesScreen(),
+    ];
+
+    return PageView(
+      controller: navegacionModel.pageController,
+      physics: const NeverScrollableScrollPhysics(),
+      children: pages,
     );
   }
 }
@@ -200,61 +243,6 @@ class _ThemeSwitch extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _Navegacion extends StatelessWidget {
-  final bool hasFavorites;
-
-  const _Navegacion({required this.hasFavorites, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final navegacionModel = Provider.of<_NavegacionModel>(context);
-    final localization = AppLocalizations.of(context)!;
-
-    return BottomNavigationBar(
-      onTap: (i) => navegacionModel.pantallaActual = i,
-      currentIndex: navegacionModel.pantallaActual,
-      items: [
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.person_outline),
-          label: localization.forYou,
-        ),
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.public),
-          label: localization.headlines,
-        ),
-        if (hasFavorites)
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.star),
-            label: localization.favorites,
-          ),
-      ],
-    );
-  }
-}
-
-class _Pantallas extends StatelessWidget {
-  final bool hasFavorites;
-
-  const _Pantallas({required this.hasFavorites, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final navegacionModel = Provider.of<_NavegacionModel>(context);
-
-    final pages = [
-      const Tab1Screen(),
-      const Tab2Screen(),
-      if (hasFavorites) const FavoritesScreen(),
-    ];
-
-    return PageView(
-      controller: navegacionModel.pageController,
-      physics: const NeverScrollableScrollPhysics(),
-      children: pages,
     );
   }
 }

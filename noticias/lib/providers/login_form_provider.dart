@@ -4,7 +4,7 @@ class LoginFormProvider extends ChangeNotifier {
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   String name = ''; // Propiedad para nombre durante el registro
-  String emailOrUsername = ''; // Cambiado para manejar correo y nombre de usuario
+  String email = ''; // Cambiado para manejar correo y nombre de usuario
   String password = '';
 
   bool _isLoading = false;
@@ -18,7 +18,7 @@ class LoginFormProvider extends ChangeNotifier {
 
   bool isValidForm() {
     print(formKey.currentState?.validate());
-    print('$emailOrUsername - $password');
+    print('$email - $password');
     return formKey.currentState?.validate() ?? false;
   }
 }

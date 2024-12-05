@@ -80,14 +80,14 @@ class _LoginForm extends StatelessWidget {
           // Campo para correo o nombre de usuario
           TextFormField(
             autocorrect: false,
-            keyboardType: TextInputType.text,
+            keyboardType: TextInputType.emailAddress,
             decoration: InputDecorations.authInputDecoration(
-              hintText: localization.emailOrUsernameHint,
-              labelText: localization.emailOrUsername,
+              hintText: localization.emailHint,
+              labelText: localization.email,
               prefixIcon: Icons.alternate_email_rounded,
               currentTheme: themeProvider,
             ),
-            onChanged: (value) => loginForm.emailOrUsername = value,
+            onChanged: (value) => loginForm.email = value,
             validator: (value) {
               return (value != null && value.isNotEmpty)
                   ? null
@@ -131,8 +131,8 @@ class _LoginForm extends StatelessWidget {
 
               loginForm.isLoading = true;
 
-              final String? errorMessage = await authService.signInWithEmailOrUsername(
-                loginForm.emailOrUsername,
+              final String? errorMessage = await authService.signIn(
+                loginForm.email,
                 loginForm.password,
               );
 

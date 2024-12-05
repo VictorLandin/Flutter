@@ -75,79 +75,81 @@ class SettingsScreen extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (_) {
-        bool isConfirmButtonEnabled = false;
-
-        return StatefulBuilder(
-          builder: (context, setState) {
-            Timer(const Duration(seconds: 5), () {
-              if (isConfirmButtonEnabled == false) {
-                setState(() {
-                  isConfirmButtonEnabled = true;
-                });
-              }
-            });
-
-            return SingleChildScrollView(
-              child: AlertDialog(
-                title: Text(localization.confirmDelete),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(localization.deleteAccountSubtitle),
-                    const SizedBox(height: 16),
-                    Text(localization.enterPassword),
-                    TextField(
-                      controller: passwordController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        hintText: localization.passwordHint,
-                      ),
-                    ),
-                  ],
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(localization.confirmDelete),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(localization.deleteAccountSubtitle),
+                const SizedBox(height: 16),
+                Text(localization.enterPassword),
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: localization.passwordHint,
+                  ),
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context); // Cerrar diálogo
-                      passwordController.dispose(); // Liberar controlador
-                    },
-                    child: Text(localization.cancel),
-                  ),
-                  TextButton(
-                    onPressed: isConfirmButtonEnabled
-                        ? () async {
-                      final password = passwordController.text;
-                      if (password.isNotEmpty) {
-                        final success = await authService.deleteAccount(password);
-                        Navigator.pop(context);
-                        passwordController.dispose(); // Liberar controlador
-              
-                        if (success) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(localization.accountDeleted)),
-                          );
-                          Navigator.of(context).pushReplacementNamed('login');
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(localization.invalidPassword)),
-                          );
-                        }
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(localization.passwordRequired)),
-                        );
-                      }
-                    }
-                        : null,
-                    child: Text(localization.confirm),
-                  ),
-                ],
-              ),
-            );
-          },
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // Cierra el diálogo
+              },
+              child: Text(localization.cancel),
+            ),
+            TextButton(
+              onPressed: () async {
+                final password = passwordController.text.trim();
+                if (password.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(localization.passwordRequired)),
+                  );
+                  return;
+                }
+
+                final success = await _deleteAccount(context, authService, password, localization);
+                if (success) {
+                  Navigator.of(dialogContext).pop(); // Cierra el diálogo
+                }
+              },
+              child: Text(localization.confirm),
+            ),
+          ],
         );
       },
-    ).then((_) => passwordController.dispose()); // Eliminar controlador al cerrar el diálogo
+    ).then((_) {
+      // Asegura liberar el controlador después de cerrar el diálogo
+      if (!passwordController.hasListeners) {
+        passwordController.dispose();
+      }
+    });
   }
+
+  Future<bool> _deleteAccount(BuildContext context, AuthService authService, String password, AppLocalizations localization) async {
+    try {
+      final success = await authService.deleteAccount(password);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(localization.accountDeleted)),
+        );
+        Navigator.of(context).pushReplacementNamed('login');
+        return true;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(localization.invalidPassword)),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${localization.errorDeletingAccount}: $e')),
+      );
+    }
+    return false;
+  }
+
 }

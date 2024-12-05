@@ -65,5 +65,18 @@
   "health": "Salud",
   "science": "Ciencia",
   "sports": "Deportes",
-  "technology": "Tecnología"
+  "technology": "Tecnología",
+  "errorDeletingAccount": "Error al eliminar la cuenta. Por favor, inténtalo de nuevo.",
+  "registerTitle": "Registro",
+  "registerButton": "Registrar",
+  "registerLoading": "Cargando...",
+  "nameLabel": "Nombre de Usuario",
+  "nameEmptyError": "El nombre no puede estar vacío",
+  "nameLengthError": "El nombre debe tener al menos 2 caracteres",
+  "emailLabel": "Correo Electrónico",
+  "emailInvalidError": "Correo no válido",
+  "passwordLabel": "Contraseña",
+  "passwordLengthError": "La contraseña debe tener al menos 6 caracteres",
+  "noFavorites": "No tienes favoritos.",
+  "errorOpeningNews": "Error al abrir las noticias."
 }

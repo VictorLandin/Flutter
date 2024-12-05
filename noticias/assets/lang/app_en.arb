@@ -65,5 +65,18 @@
   "health": "Health",
   "science": "Science",
   "sports": "Sports",
-  "technology": "Technology"
+  "technology": "Technology",
+  "errorDeletingAccount": "Error deleting account. Please try again.",
+  "registerTitle": "Register",
+  "registerButton": "Register",
+  "registerLoading": "Loading...",
+  "nameLabel": "Username",
+  "nameEmptyError": "The name cannot be empty",
+  "nameLengthError": "The name must have at least 2 characters",
+  "emailLabel": "Email Address",
+  "emailInvalidError": "Invalid email address",
+  "passwordLabel": "Password",
+  "passwordLengthError": "Password must have at least 6 characters",
+  "noFavorites": "No favorites yet",
+  "errorOpeningNews": "Error opening news"
 }

@@ -60,47 +60,63 @@ class AuthService extends ChangeNotifier {
 
   Future<String?> createUser(String email, String password, String name) async {
     try {
+      // Verificar si el nombre de usuario ya existe
+      final usernameSnapshot = await _db.child('usernames/$name').get();
+      if (usernameSnapshot.exists) {
+        return 'El nombre de usuario ya está en uso';
+      }
+
+      // Crear el usuario en Firebase Authentication
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
       final userId = userCredential.user!.uid;
+
+      // Guardar datos del usuario
       await _db.child('users/$userId').set({
         'name': name,
         'email': email,
         'createdAt': DateTime.now().toIso8601String(),
       });
 
-      return null; // Success
+      // Asociar el nombre de usuario con el userId
+      await _db.child('usernames/$name').set(userId);
+
+      return null; // Registro exitoso
     } catch (e) {
       return 'Error al registrar usuario: ${e.toString()}';
     }
   }
 
-  Future<String?> signInWithEmailOrUsername(String emailOrUsername, String password) async {
+  Future<String?> signIn(String emailOrUsername, String password) async {
     try {
       String email = emailOrUsername;
 
       if (!isValidEmail(emailOrUsername)) {
-        final snapshot = await _db
-            .child('users')
-            .orderByChild('name')
-            .equalTo(emailOrUsername)
-            .once();
-
-        if (snapshot.snapshot.value == null) {
-          return 'Usuario no encontrado';
+        // Buscar el userId asociado al nombre de usuario
+        final usernameSnapshot = await _db.child('usernames/$emailOrUsername').get();
+        if (!usernameSnapshot.exists) {
+          return 'Nombre de usuario no encontrado';
         }
 
-        final Map<String, dynamic> userData = Map<String, dynamic>.from(
-            (snapshot.snapshot.value as Map).values.first);
-        email = userData['email'];
+        final userId = usernameSnapshot.value as String;
+
+        // Buscar el correo electrónico asociado al userId
+        final userSnapshot = await _db.child('users/$userId').get();
+        if (userSnapshot.exists) {
+          final userData = userSnapshot.value as Map<String, dynamic>;
+          email = userData['email'];
+        } else {
+          return 'Usuario no encontrado';
+        }
       }
 
+      // Intentar iniciar sesión con el correo electrónico obtenido
       await _auth.signInWithEmailAndPassword(email: email, password: password);
 
-      return null; // Success
+      return null; // Inicio de sesión exitoso
     } catch (e) {
       return 'Error al iniciar sesión: ${e.toString()}';
     }
@@ -113,24 +129,37 @@ class AuthService extends ChangeNotifier {
 
   Future<bool> deleteAccount(String password) async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      final user = _auth.currentUser;
 
       if (user != null) {
-        // Reautenticación para borrar la cuenta
+        // Reautenticar al usuario
         final credential = EmailAuthProvider.credential(
           email: user.email!,
           password: password,
         );
         await user.reauthenticateWithCredential(credential);
 
-        // Eliminar los datos del usuario en la base de datos
-        await _db.child('users/${user.uid}').remove();
+        final userId = user.uid;
+
+        // Obtener el nombre de usuario asociado
+        final userSnapshot = await _db.child('users/$userId').get();
+        if (userSnapshot.exists) {
+          final userData = userSnapshot.value as Map<String, dynamic>;
+          final username = userData['name'];
+
+          // Eliminar el nombre de usuario del nodo usernames
+          await _db.child('usernames/$username').remove();
+        }
+
+        // Eliminar los datos del usuario
+        await _db.child('users/$userId').remove();
 
         // Eliminar la cuenta de Firebase Authentication
         await user.delete();
 
         return true; // Operación exitosa
       }
+
       return false; // Usuario no autenticado
     } catch (e) {
       debugPrint('Error al eliminar la cuenta: $e');

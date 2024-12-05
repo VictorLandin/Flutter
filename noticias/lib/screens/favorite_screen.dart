@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:noticias/models/news_models.dart';
 import 'package:noticias/widgets/lista_noticias.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class FavoritesScreen extends StatelessWidget {
@@ -10,9 +11,10 @@ class FavoritesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userId = FirebaseAuth.instance.currentUser?.uid;
+    final localization = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Favoritos')),
+      appBar: AppBar(title: Text(localization.favorites)),
       body: FutureBuilder<DataSnapshot>(
         future: FirebaseDatabase.instance.ref('users/$userId/favorites').get(),
         builder: (context, snapshot) {
@@ -21,7 +23,7 @@ class FavoritesScreen extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.value == null) {
-            return const Center(child: Text('No tienes favoritos.'));
+            return Center(child: Text(localization.noFavorites));
           }
 
           // Convertir los datos obtenidos en una lista de artículos

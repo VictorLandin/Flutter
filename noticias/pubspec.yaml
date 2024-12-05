@@ -48,8 +48,18 @@ dependencies:
   cloudinary: ^1.2.0
   url_launcher: ^6.3.0
   cloudinary_api: ^1.0.0
+  flutter_launcher_icons: ^0.14.1
   flutter_secure_storage: ^9.2.2
   intl: ^0.19.0
+
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/icon.png"
+  adaptive_icon_background: "#FFFFFF" # Fondo blanco o transparente
+  adaptive_icon_foreground: "assets/icons/icon.png"
+
 
 dev_dependencies:
   flutter_test:
@@ -78,6 +88,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/icons/
     - assets/lang/
     - assets/
 
